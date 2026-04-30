@@ -15,7 +15,7 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ═══════════════════════════════════════════
 //  IN-MEMORY STORES
@@ -42,8 +42,17 @@ setInterval(() => {
 // ═══════════════════════════════════════════
 //  MIDDLEWARE
 // ═══════════════════════════════════════════
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+
+// CORS — allow all origins from any domain
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json());
 
 // Global rate limiter — 100 req/min per IP

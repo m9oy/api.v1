@@ -7,8 +7,9 @@
 (function (global) {
   "use strict";
 
-  const API_BASE = "https://api.desv.online/v1";
-
+  const API_BASE =
+  "https://illustrious-playfulness-production-dd1f.up.railway.app/v1";
+  
   const DEFAULT_OPTS = {
     type: "code",       // "code" | "puzzle" | "invisible"
     theme: "dark",      // "dark" | "light" | "auto"

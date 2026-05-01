@@ -115,7 +115,7 @@ function generateCodeImage(code, theme = "dark") {
   for (let y = 0; y < H; y += 15) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
   // Noise
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 35; i++) {
     ctx.fillStyle = dark ? `rgba(255,255,255,${Math.random()*0.12})` : `rgba(0,0,0,${Math.random()*0.08})`;
     ctx.beginPath(); ctx.arc(Math.random()*W, Math.random()*H, Math.random()*1.5, 0, Math.PI*2); ctx.fill();
   }
@@ -124,7 +124,7 @@ function generateCodeImage(code, theme = "dark") {
   const lc = dark
     ? ["rgba(110,168,255,0.2)","rgba(168,216,168,0.15)","rgba(255,200,80,0.12)"]
     : ["rgba(100,120,255,0.18)","rgba(50,180,100,0.14)","rgba(200,100,0,0.12)"];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 3; i++) {
     ctx.strokeStyle = lc[i % lc.length]; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(Math.random()*W, Math.random()*H);
@@ -137,23 +137,33 @@ function generateCodeImage(code, theme = "dark") {
     ? ["#7aabff","#a8d8a8","#ffcf80","#ff9cda","#80e8ff","#c8b8ff"]
     : ["#2255cc","#1a7a3c","#cc7700","#cc2299","#0077aa","#7744cc"];
 
-  for (let i = 0; i < code.length; i++) {
-    const x   = 18 + i * 34;
-    const y   = 50 + (Math.random() - 0.5) * 14;
-    const ang = (Math.random() - 0.5) * 0.45;
-    const sz  = 28 + Math.random() * 8;
-    const col = colors[i % colors.length];
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(ang);
-    ctx.scale(1, 0.88 + Math.random() * 0.24); // ✅ before font
-    ctx.shadowColor = col;
-    ctx.shadowBlur  = 6;
-    ctx.font        = `bold ${sz}px Arial`;
-    ctx.fillStyle   = col;
-    ctx.fillText(code[i], 0, 0);
-    ctx.restore();
-  }
+  // Characters
+for (let i = 0; i < code.length; i++) {
+
+  const x   = 18 + i * 34;
+  const y   = 52;
+  const ang = (Math.random() - 0.5) * 0.2;
+
+  ctx.save();
+
+  ctx.translate(x, y);
+
+  ctx.rotate(ang);
+
+  ctx.font = "bold 34px Arial";
+
+  ctx.fillStyle = "#ffffff";
+
+  ctx.strokeStyle = "#7aabff";
+
+  ctx.lineWidth = 1.5;
+
+  ctx.strokeText(code[i], 0, 0);
+
+  ctx.fillText(code[i], 0, 0);
+
+  ctx.restore();
+}
 
   // Border
   ctx.strokeStyle = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)";

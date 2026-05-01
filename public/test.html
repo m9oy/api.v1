@@ -235,8 +235,8 @@
             if (typeof Captcha !== 'undefined') {
                 // رندر الكابتشا من الـ API (نوع اللغز باللغة العربية)
                 Captcha.render("#captcha-box", {
-                    type: "puzzle",
-                    lang: "ar",
+                    type: "button",
+                    lang: "en",
                     onVerify: function(result) {
                         if (result.success) {
                             isCaptchaSolved = true;

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CAPTCHA · desv.online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root {
+  --bg: #060608;
+  --panel: rgba(13,13,17,.98);
+  --line: rgba(255,255,255,.07);
+  --text: #f0f0f2;
+  --muted: rgba(255,255,255,.42);
+  --blue: #6ea8ff;
+  --blue-dim: rgba(110,168,255,.12);
+  --green: #4eca80;
+  --red: #ff6b6b;
+  --radius: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 40px 16px;
+  background-image: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(80,120,255,.12) 0%, transparent 70%);
+}
+.controls-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.ctrl-group { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; }
+.ctrl-label { font-size: 9px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; }
+.ctrl-select { background: transparent; border: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; outline: none; }
+.ctrl-select option { background: #0d0d10; }
+.captcha-widget { width: 310px; background: var(--panel); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 60px rgba(0,0,0,.5); padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; position: relative; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.captcha-widget:hover { border-color: rgba(110,168,255,.22); }
+.cb-wrap { width: 22px; height: 22px; flex-shrink: 0; }
+.cb-box { width: 22px; height: 22px; border: 1.5px solid rgba(255,255,255,.2); border-radius: 6px; background: rgba(255,255,255,.03); transition: all .2s; display: grid; place-items: center; }
+.cb-box.loading { border-color: var(--blue); border-top-color: transparent; border-radius: 50%; animation: spin .75s linear infinite; }
+.cb-box.checked { border-color: rgba(110,168,255,.6); background: rgba(110,168,255,.1); }
+.cb-check { display: none; color: var(--blue); }
+.cb-check i { width: 10px; height: 10px; }
+.cb-box.checked .cb-check { display: grid; place-items: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cb-label { flex: 1; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.72); letter-spacing: -.1px; }
+.cb-brand { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.cb-brand-icon { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); display: grid; place-items: center; color: rgba(255,255,255,.55); }
+.cb-brand-icon i { width: 13px; height: 13px; }
+.cb-brand span { font-size: 7.5px; color: rgba(255,255,255,.28); letter-spacing: .2px; white-space: nowrap; }
+.success-pill { display: none; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(110,168,255,.08); border: 1px solid rgba(110,168,255,.2); border-radius: 999px; font-size: 9px; color: var(--blue); font-weight: 500; }
+.success-pill i { width: 10px; height: 10px; }
+.success-pill.show { display: flex; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(6,6,8,.88); backdrop-filter: blur(10px); display: none; z-index: 100; animation: fadeIn .2s ease; }
+.modal-overlay.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.challenge-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.96); width: min(430px, calc(100vw - 28px)); background: var(--panel); border: 1px solid rgba(255,255,255,.09); border-radius: 20px; box-shadow: 0 40px 80px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05); overflow: hidden; display: none; z-index: 101; animation: popIn .22s cubic-bezier(.34,1.56,.64,1) forwards; }
+.challenge-box.active { display: block; }
+@keyframes popIn { from { opacity: 0; transform: translate(-50%,-50%) scale(.93); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+.ch-header { padding: 18px 18px 14px; background: rgba(255,255,255,.02); border-bottom: 1px solid var(--line); }
+.ch-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ch-badge { display: flex; align-items: center; gap: 5px; padding: 3px 8px; background: rgba(110,168,255,.08); border: 1px solid rgba(110,168,255,.18); border-radius: 999px; font-size: 8.5px; color: var(--blue); font-weight: 500; }
+.ch-badge i { width: 10px; height: 10px; }
+.ch-close { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); display: grid; place-items: center; cursor: pointer; color: rgba(255,255,255,.45); transition: .15s; }
+.ch-close:hover { background: rgba(255,255,255,.08); color: #fff; }
+.ch-close i { width: 12px; height: 12px; }
+.ch-title-label { font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.ch-title { font-size: 17px; font-weight: 300; letter-spacing: -.4px; color: #edecf2; line-height: 1.15; }
+.shine { background: linear-gradient(90deg, #fff 0%, #c8c8dc 30%, #888 55%, #111 72%, #fff 100%); background-size: 220% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shine 3s linear infinite; }
+@keyframes shine { 0%{background-position:220% center} 100%{background-position:0% center} }
+.ch-content { padding: 14px 16px; }
+.ch-footer { padding: 11px 16px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ch-actions { display: flex; align-items: center; gap: 5px; }
+.ch-icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.03); display: grid; place-items: center; cursor: pointer; color: rgba(255,255,255,.4); transition: .15s; }
+.ch-icon-btn:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); }
+.ch-icon-btn i { width: 13px; height: 13px; }
+.btn-verify { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 9px; border: 1px solid rgba(255,255,255,.14); background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04)); color: #f0f0f4; font-size: 10px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.4); transition: .18s; }
+.btn-verify:hover { background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.07)); }
+.btn-verify i { width: 12px; height: 12px; }
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.grid-item { aspect-ratio: 1; background-size: cover; background-position: center; cursor: pointer; border-radius: 9px; border: 1.5px solid rgba(255,255,255,.06); position: relative; overflow: hidden; transition: transform .12s, border-color .12s; }
+.grid-item::before { content: ''; position: absolute; inset: 0; background: rgba(6,6,8,.22); transition: background .12s; }
+.grid-item:hover { border-color: rgba(110,168,255,.3); }
+.grid-item.selected { border-color: var(--blue); transform: scale(.94); }
+.grid-item.selected::before { background: rgba(110,168,255,.14); }
+.sel-check { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 6px; background: var(--blue); display: none; place-items: center; }
+.sel-check i { width: 11px; height: 11px; color: #fff; }
+.grid-item.selected .sel-check { display: grid; }
+.grid-loading { grid-column: 1/-1; height: 200px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+.puzzle-bg { width: 100%; height: 168px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 12px; position: relative; overflow: hidden; margin-bottom: 12px; }
+.puzzle-bg img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 11px; }
+.puzzle-piece-img { position: absolute; width: 52px; height: 52px; border: 2px solid rgba(110,168,255,.55); border-radius: 8px; box-shadow: 0 0 14px rgba(110,168,255,.3); pointer-events: none; overflow: hidden; }
+.puzzle-piece-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.puzzle-slot-box { position: absolute; width: 52px; height: 52px; background: rgba(6,6,8,.75); border: 2px dashed rgba(110,168,255,.35); border-radius: 8px; }
+.slider-label { display: flex; align-items: center; justify-content: space-between; font-size: 9px; color: var(--muted); margin-bottom: 7px; }
+.slider-label i { width: 10px; height: 10px; }
+.slider-track { height: 38px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; position: relative; overflow: hidden; }
+.slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, rgba(110,168,255,.1), rgba(110,168,255,.04)); }
+.slider-handle { position: absolute; top: 3px; left: 3px; width: 32px; height: 30px; background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; display: grid; place-items: center; cursor: grab; color: rgba(255,255,255,.65); user-select: none; touch-action: none; }
+.slider-handle:hover, .slider-handle.dragging { background: linear-gradient(180deg, rgba(110,168,255,.2), rgba(110,168,255,.08)); border-color: rgba(110,168,255,.3); color: var(--blue); cursor: grabbing; }
+.slider-handle i { width: 14px; height: 14px; }
+.code-img-wrap { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 90px; position: relative; }
+.code-loading { position: absolute; font-size: 10px; color: var(--muted); animation: pulse 1.4s infinite; }
+.code-input-wrap { display: flex; gap: 6px; }
+.code-input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 9px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px; letter-spacing: 5px; text-align: center; outline: none; transition: border-color .15s; }
+.code-input:focus { border-color: rgba(110,168,255,.35); }
+.code-input::placeholder { color: var(--muted); letter-spacing: 2px; font-size: 12px; }
+.code-refresh { width: 42px; height: 42px; border-radius: 9px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); display: grid; place-items: center; cursor: pointer; color: var(--muted); transition: .15s; flex-shrink: 0; }
+.code-refresh:hover { color: var(--text); }
+.code-refresh i { width: 14px; height: 14px; }
+.btn-challenge-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 0; }
+.btn-challenge-icon { width: 54px; height: 54px; border-radius: 14px; background: rgba(110,168,255,.08); border: 1px solid rgba(110,168,255,.2); display: grid; place-items: center; color: var(--blue); }
+.btn-challenge-icon i { width: 24px; height: 24px; }
+.btn-challenge-desc { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
+.btn-challenge-main { display: flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 10px; border: 1px solid rgba(110,168,255,.25); background: rgba(110,168,255,.08); color: var(--blue); font-size: 12px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; transition: .18s; }
+.btn-challenge-main:hover { background: rgba(110,168,255,.15); }
+.btn-challenge-main i { width: 14px; height: 14px; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); padding: 9px 18px; border-radius: 999px; font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 7px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 200; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok { background: rgba(78,202,128,.15); border: 1px solid rgba(78,202,128,.3); color: var(--green); }
+.toast.err { background: rgba(255,107,107,.15); border: 1px solid rgba(255,107,107,.3); color: var(--red); }
+.toast i { width: 12px; height: 12px; }
+.demo-label { font-size: 9px; color: var(--muted); letter-spacing: .4px; text-align: center; }
+.back-link { font-size: 9px; color: var(--muted); text-decoration: none; padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; transition: .15s; }
+.back-link:hover { color: var(--text); }
+@keyframes shake { 0%,100%{transform:translate(-50%,-50%) translateX(0)} 20%{transform:translate(-50%,-50%) translateX(-6px)} 40%{transform:translate(-50%,-50%) translateX(6px)} 60%{transform:translate(-50%,-50%) translateX(-4px)} 80%{transform:translate(-50%,-50%) translateX(4px)} }
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">← Back</a>
+<div class="demo-label">CAPTCHA WIDGET · DESV.ONLINE</div>
+
+<div class="controls-bar">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Mode</span>
+    <select class="ctrl-select" id="ctrlMode">
+      <option value="random">🎲 Random</option>
+      <option value="grid">🖼 Image Grid</option>
+      <option value="puzzle">🧩 Puzzle</option>
+      <option value="code">🔢 Code</option>
+      <option value="button">🛡 Button</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Lang</span>
+    <select class="ctrl-select" id="ctrlLang">
+      <option value="en">🇺🇸 English</option>
+      <option value="ar">🇸🇦 العربية</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Size</span>
+    <select class="ctrl-select" id="ctrlSize">
+      <option value="md">Medium</option>
+      <option value="sm">Small</option>
+      <option value="lg">Large</option>
+    </select>
+  </div>
+</div>
+
+<div class="captcha-widget" id="captchaWidget">
+  <div class="cb-wrap">
+    <div class="cb-box" id="cbBox">
+      <div class="cb-check" id="cbCheck"><i data-lucide="check"></i></div>
+    </div>
+  </div>
+  <span class="cb-label" id="widgetLabel">I'm not a robot</span>
+  <div class="cb-brand">
+    <div class="cb-brand-icon"><i data-lucide="shield-check"></i></div>
+    <span>Privacy · Terms</span>
+  </div>
+  <div class="success-pill" id="successPill">
+    <i data-lucide="shield-check"></i> <span id="successText">Verified</span>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeChallenge()"></div>
+
+<div class="challenge-box" id="challengeBox">
+  <div id="viewGrid" style="display:none">
+    <div class="ch-header">
+      <div class="ch-header-top">
+        <div class="ch-badge"><i data-lucide="grid-3x3"></i> <span data-i18n="badgeGrid">Image Challenge</span></div>
+        <div class="ch-close" onclick="closeChallenge()"><i data-lucide="x"></i></div>
+      </div>
+      <div class="ch-title-label" data-i18n="gridInstruction">Select all images containing</div>
+      <div class="ch-title"><span class="shine" id="gridTarget">vehicles</span></div>
+    </div>
+    <div class="ch-content"><div class="image-grid" id="imageGrid"><div class="grid-loading">Loading images…</div></div></div>
+    <div class="ch-footer">
+      <div class="ch-actions">
+        <div class="ch-icon-btn" onclick="initGrid()"><i data-lucide="refresh-cw"></i></div>
+        <div class="ch-icon-btn"><i data-lucide="info"></i></div>
+      </div>
+      <button class="btn-verify" onclick="verifyGrid()"><i data-lucide="shield-check"></i> <span data-i18n="verify">Verify</span></button>
+    </div>
+  </div>
+
+  <div id="viewPuzzle" style="display:none">
+    <div class="ch-header">
+      <div class="ch-header-top">
+        <div class="ch-badge"><i data-lucide="move-horizontal"></i> <span data-i18n="badgePuzzle">Puzzle Challenge</span></div>
+        <div class="ch-close" onclick="closeChallenge()"><i data-lucide="x"></i></div>
+      </div>
+      <div class="ch-title-label" data-i18n="puzzleInstruction">Slide the piece to fill the gap</div>
+      <div class="ch-title"><span class="shine" data-i18n="puzzleTitle">complete the puzzle</span></div>
+    </div>
+    <div class="ch-content">
+      <div class="puzzle-bg" id="puzzleBg">
+        <img id="puzzleBgImg" src="" alt="" style="opacity:0;transition:opacity .3s;">
+        <div class="puzzle-slot-box" id="puzzleSlotBox"></div>
+        <div class="puzzle-piece-img" id="puzzlePieceImg"><img id="puzzlePieceInner" src="" alt=""></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span><i data-lucide="move-right"></i> <span data-i18n="slideLabel">Slide to align</span></span><span id="sliderStatus">—</span></div>
+        <div class="slider-track" id="sliderTrack"><div class="slider-fill" id="sliderFill"></div><div class="slider-handle" id="sliderHandle"><i data-lucide="chevrons-right"></i></div></div>
+      </div>
+    </div>
+    <div class="ch-footer">
+      <div class="ch-actions"><div class="ch-icon-btn" onclick="initPuzzle()"><i data-lucide="refresh-cw"></i></div><div class="ch-icon-btn"><i data-lucide="info"></i></div></div>
+      <button class="btn-verify" onclick="verifyPuzzle()"><i data-lucide="shield-check"></i> <span data-i18n="verify">Verify</span></button>
+    </div>
+  </div>
+
+  <div id="viewCode" style="display:none">
+    <div class="ch-header">
+      <div class="ch-header-top">
+        <div class="ch-badge"><i data-lucide="type"></i> <span data-i18n="badgeCode">Code Challenge</span></div>
+        <div class="ch-close" onclick="closeChallenge()"><i data-lucide="x"></i></div>
+      </div>
+      <div class="ch-title-label" data-i18n="codeInstruction">Type the characters you see</div>
+      <div class="ch-title"><span class="shine" data-i18n="codeTitle">enter the code</span></div>
+    </div>
+    <div class="ch-content">
+      <div class="code-img-wrap" id="codeImgWrap">
+        <span class="code-loading" data-i18n="generating">Generating…</span>
+        <canvas id="codeCanvas" width="390" height="90" style="display:none; width:100%; height:90px; border-radius:9px;"></canvas>
+      </div>
+      <div class="code-input-wrap">
+        <input class="code-input" id="codeInput" type="text" maxlength="6" placeholder="· · · · · ·" autocomplete="off" spellcheck="false" dir="ltr">
+        <div class="code-refresh" onclick="initCode()"><i data-lucide="refresh-cw"></i></div>
+      </div>
+    </div>
+    <div class="ch-footer">
+      <div class="ch-actions"><div class="ch-icon-btn" onclick="initCode()"><i data-lucide="refresh-cw"></i></div><div class="ch-icon-btn"><i data-lucide="info"></i></div></div>
+      <button class="btn-verify" onclick="verifyCode()"><i data-lucide="shield-check"></i> <span data-i18n="verify">Verify</span></button>
+    </div>
+  </div>
+
+  <div id="viewButton" style="display:none">
+    <div class="ch-header">
+      <div class="ch-header-top">
+        <div class="ch-badge"><i data-lucide="shield"></i> <span data-i18n="badgeButton">Security Check</span></div>
+        <div class="ch-close" onclick="closeChallenge()"><i data-lucide="x"></i></div>
+      </div>
+      <div class="ch-title-label" data-i18n="buttonInstruction">One-click verification</div>
+      <div class="ch-title"><span class="shine" data-i18n="buttonTitle">confirm you're human</span></div>
+    </div>
+    <div class="ch-content">
+      <div class="btn-challenge-wrap">
+        <div class="btn-challenge-icon"><i data-lucide="scan-face"></i></div>
+        <p class="btn-challenge-desc" data-i18n="buttonDesc">Click the button below. We'll analyze your browser fingerprint invisibly — no puzzles needed.</p>
+        <button class="btn-challenge-main" id="btnChallengeMain" onclick="startButtonChallenge()">
+          <i data-lucide="shield-check"></i> <span data-i18n="verifyNow">Verify Now</span>
+        </button>
+      </div>
+    </div>
+    <div class="ch-footer">
+      <div class="ch-actions"><div class="ch-icon-btn"><i data-lucide="info"></i></div></div>
+      <span style="font-size:8.5px; color:var(--muted)">Powered by desv.online</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i data-lucide="check-circle"></i> <span id="toastMsg"></span></div>
+
+<script>
+const LANG={en:{widgetLabel:"I'm not a robot",successText:"Verified",badgeGrid:"Image Challenge",gridInstruction:"Select all images containing",badgePuzzle:"Puzzle Challenge",puzzleInstruction:"Slide the piece to fill the gap",puzzleTitle:"complete the puzzle",badgeCode:"Code Challenge",codeInstruction:"Type the characters you see",codeTitle:"enter the code",badgeButton:"Security Check",buttonInstruction:"One-click verification",buttonTitle:"confirm you're human",buttonDesc:"Click the button below. We'll analyze your browser fingerprint invisibly — no puzzles needed.",verifyNow:"Verify Now",verify:"Verify",slideLabel:"Slide to align",loading:"Loading images…",generating:"Generating…",poweredBy:"Powered by desv.online",wrong:"Incorrect — please try again.",success:"Verified! You're human ✓",waitingSlider:"Waiting…",gettingClose:"Getting close…",almostThere:"Almost there…"},ar:{widgetLabel:"لست روبوتًا",successText:"تم التحقق",badgeGrid:"تحدي الصور",gridInstruction:"اختر جميع الصور التي تحتوي على",badgePuzzle:"تحدي اللغز",puzzleInstruction:"اسحب القطعة لملء الفراغ",puzzleTitle:"أكمل اللغز",badgeCode:"تحدي الكود",codeInstruction:"اكتب الأحرف التي تراها",codeTitle:"أدخل الكود",badgeButton:"فحص أمني",buttonInstruction:"تحقق بنقرة واحدة",buttonTitle:"أثبت أنك إنسان",buttonDesc:"اضغط على الزر أدناه. سنحلل متصفحك بشكل غير مرئي.",verifyNow:"تحقق الآن",verify:"تحقق",slideLabel:"اسحب للمحاذاة",loading:"جارٍ التحميل…",generating:"جارٍ الإنشاء…",poweredBy:"مدعوم من desv.online",wrong:"خاطئ — حاول مجدداً.",success:"تم التحقق! أنت إنسان ✓",waitingSlider:"في الانتظار…",gettingClose:"تقترب…",almostThere:"على وشك الإنجاز…"},fr:{widgetLabel:"Je ne suis pas un robot",successText:"Vérifié",badgeGrid:"Défi image",gridInstruction:"Sélectionnez toutes les images contenant",badgePuzzle:"Défi puzzle",puzzleInstruction:"Glissez la pièce pour remplir l'espace",puzzleTitle:"compléter le puzzle",badgeCode:"Défi code",codeInstruction:"Tapez les caractères que vous voyez",codeTitle:"entrez le code",badgeButton:"Vérification sécurité",buttonInstruction:"Vérification en un clic",buttonTitle:"confirmez que vous êtes humain",buttonDesc:"Cliquez sur le bouton ci-dessous.",verifyNow:"Vérifier maintenant",verify:"Vérifier",slideLabel:"Glissez pour aligner",loading:"Chargement…",generating:"Génération…",poweredBy:"Propulsé par desv.online",wrong:"Incorrect — veuillez réessayer.",success:"Vérifié ! Vous êtes humain ✓",waitingSlider:"En attente…",gettingClose:"On se rapproche…",almostThere:"Presque…"},de:{widgetLabel:"Ich bin kein Roboter",successText:"Verifiziert",badgeGrid:"Bild-Challenge",gridInstruction:"Wähle alle Bilder mit",badgePuzzle:"Puzzle-Challenge",puzzleInstruction:"Schiebe das Teil in die Lücke",puzzleTitle:"das Puzzle vervollständigen",badgeCode:"Code-Challenge",codeInstruction:"Gib die Zeichen ein, die du siehst",codeTitle:"Code eingeben",badgeButton:"Sicherheitsprüfung",buttonInstruction:"Einzel-Klick-Verifizierung",buttonTitle:"beweise, dass du ein Mensch bist",buttonDesc:"Klicke auf den Knopf.",verifyNow:"Jetzt verifizieren",verify:"Verifizieren",slideLabel:"Schiebe zum Ausrichten",loading:"Wird geladen…",generating:"Wird generiert…",poweredBy:"Powered by desv.online",wrong:"Falsch — bitte erneut versuchen.",success:"Verifiziert! Du bist ein Mensch ✓",waitingSlider:"Warten…",gettingClose:"Nähert sich…",almostThere:"Fast da…"}};
+let currentLang='en',t=LANG.en;
+function applyLang(l){currentLang=l;t=LANG[l]||LANG.en;document.getElementById('widgetLabel').textContent=t.widgetLabel;document.getElementById('successText').textContent=t.successText;document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(t[k])el.textContent=t[k];});document.getElementById('challengeBox').style.direction=l==='ar'?'rtl':'ltr';document.getElementById('captchaWidget').style.direction=l==='ar'?'rtl':'ltr';lucide.createIcons();}
+const CATEGORIES={vehicles:{label:{en:'vehicles',ar:'مركبات',fr:'véhicules',de:'Fahrzeuge'},images:['https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1588258219511-64eb629cb833?w=200&h=200&fit=crop'],distractors:['https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=200&h=200&fit=crop']},animals:{label:{en:'animals',ar:'حيوانات',fr:'animaux',de:'Tiere'},images:['https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1517849845537-4d257902454a?w=200&h=200&fit=crop'],distractors:['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1501854140801-50d01698950b?w=200&h=200&fit=crop']},food:{label:{en:'food',ar:'طعام',fr:'nourriture',de:'Essen'},images:['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop'],distractors:['https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=200&h=200&fit=crop','https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop']}};
+const PUZZLE_IMAGES=['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&h=200&fit=crop','https://images.unsplash.com/photo-1501854140801-50d01698950b?w=500&h=200&fit=crop','https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=500&h=200&fit=crop'];
+let selectedCells=[],correctCells=[],targetX=0,currentCode='',puzzleDragging=false,puzzleStartX=0,puzzleHandleLeft=0;
+function getMode(){const m=document.getElementById('ctrlMode').value;if(m==='random'){const modes=['grid','puzzle','code','button'];return modes[Math.floor(Math.random()*modes.length)];}return m;}
+function startVerification(){const box=document.getElementById('cbBox');if(box.classList.contains('checked'))return;box.classList.add('loading');setTimeout(()=>{box.classList.remove('loading');openChallenge();const mode=getMode();hideAllViews();if(mode==='grid')initGrid();else if(mode==='puzzle')initPuzzle();else if(mode==='code')initCode();else if(mode==='button')initButton();},700);}
+function openChallenge(){document.getElementById('modalOverlay').classList.add('active');const cb=document.getElementById('challengeBox');cb.classList.add('active');cb.style.display='block';}
+function closeChallenge(){document.getElementById('modalOverlay').classList.remove('active');const cb=document.getElementById('challengeBox');cb.classList.remove('active');cb.style.display='none';document.getElementById('cbBox').classList.remove('loading','checked');document.getElementById('successPill').classList.remove('show');}
+function hideAllViews(){['viewGrid','viewPuzzle','viewCode','viewButton'].forEach(id=>{document.getElementById(id).style.display='none';});}
+function initGrid(){hideAllViews();document.getElementById('viewGrid').style.display='';selectedCells=[];correctCells=[];const catKeys=Object.keys(CATEGORIES);const targetKey=catKeys[Math.floor(Math.random()*catKeys.length)];const cat=CATEGORIES[targetKey];const label=cat.label[currentLang]||cat.label.en;document.getElementById('gridTarget').textContent=label;const grid=document.getElementById('imageGrid');grid.innerHTML=`<div class="grid-loading">${t.loading}</div>`;const targetCount=3+Math.floor(Math.random()*3);const cells=[];for(let i=0;i<9;i++)cells.push(i<targetCount?'target':'distractor');for(let i=cells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}const shuffled=arr=>[...arr].sort(()=>Math.random()-.5);const targetImgs=shuffled(cat.images);const distractorImgs=shuffled(cat.distractors);let ti=0,di=0;setTimeout(()=>{grid.innerHTML='';cells.forEach((type,idx)=>{if(type==='target')correctCells.push(idx);const url=type==='target'?targetImgs[ti++%targetImgs.length]:distractorImgs[di++%distractorImgs.length];const item=document.createElement('div');item.className='grid-item';item.style.backgroundImage=`url(${url})`;const sc=document.createElement('div');sc.className='sel-check';sc.innerHTML='<i data-lucide="check"></i>';item.appendChild(sc);item.onclick=()=>{item.classList.toggle('selected');if(item.classList.contains('selected'))selectedCells.push(idx);else selectedCells=selectedCells.filter(c=>c!==idx);lucide.createIcons();};grid.appendChild(item);});lucide.createIcons();},200);}
+function verifyGrid(){const ok=JSON.stringify([...selectedCells].sort())===JSON.stringify([...correctCells].sort());if(ok)finish();else{shakeBox();showToast(t.wrong,'err');setTimeout(initGrid,500);}}
+function initPuzzle(){hideAllViews();document.getElementById('viewPuzzle').style.display='';const bgUrl=PUZZLE_IMAGES[Math.floor(Math.random()*PUZZLE_IMAGES.length)];const bgImg=document.getElementById('puzzleBgImg');bgImg.style.opacity='0';bgImg.onload=()=>{bgImg.style.opacity='1';};bgImg.src=bgUrl;const puzzleBg=document.getElementById('puzzleBg');const bgW=puzzleBg.offsetWidth||398;const slotTop=50+Math.random()*66;targetX=Math.min(bgW-70,130+Math.random()*(bgW-200));const slotBox=document.getElementById('puzzleSlotBox');slotBox.style.left=targetX+'px';slotBox.style.top=slotTop+'px';const pieceImg=document.getElementById('puzzlePieceImg');const inner=document.getElementById('puzzlePieceInner');pieceImg.style.top=slotTop+'px';pieceImg.style.left='4px';inner.src=bgUrl;inner.style.objectPosition=`-${targetX}px -${slotTop}px`;inner.style.width=bgW+'px';inner.style.height='168px';inner.style.maxWidth='unset';const handle=document.getElementById('sliderHandle');const fill=document.getElementById('sliderFill');handle.style.left='3px';fill.style.width='0px';document.getElementById('sliderStatus').textContent=t.waitingSlider;puzzleHandleLeft=0;puzzleDragging=false;handle.onmousedown=e=>{puzzleDragging=true;puzzleStartX=e.clientX-puzzleHandleLeft;handle.classList.add('dragging');e.preventDefault();};handle.ontouchstart=e=>{puzzleDragging=true;puzzleStartX=e.touches[0].clientX-puzzleHandleLeft;handle.classList.add('dragging');e.preventDefault();};lucide.createIcons();}
+function movePuzzle(clientX){if(!puzzleDragging)return;const track=document.getElementById('sliderTrack');const trackW=track.offsetWidth;const maxLeft=trackW-38;puzzleHandleLeft=Math.max(0,Math.min(maxLeft,clientX-puzzleStartX));document.getElementById('sliderHandle').style.left=(puzzleHandleLeft+3)+'px';document.getElementById('sliderFill').style.width=(puzzleHandleLeft+3)+'px';const puzzleBg=document.getElementById('puzzleBg');const bgW=puzzleBg.offsetWidth||398;const ratio=puzzleHandleLeft/maxLeft;const pieceX=ratio*(bgW-60);document.getElementById('puzzlePieceImg').style.left=pieceX+'px';const pct=Math.round(ratio*100);const status=document.getElementById('sliderStatus');if(pct<20)status.textContent=t.waitingSlider;else if(pct<65)status.textContent=t.gettingClose;else status.textContent=t.almostThere;}
+function releasePuzzle(){if(!puzzleDragging)return;puzzleDragging=false;document.getElementById('sliderHandle').classList.remove('dragging');}
+function verifyPuzzle(){const pieceEl=document.getElementById('puzzlePieceImg');const pieceX=parseFloat(pieceEl.style.left)||0;if(Math.abs(pieceX-targetX)<18)finish();else{shakeBox();showToast(t.wrong,'err');setTimeout(initPuzzle,500);}}
+function initCode(){hideAllViews();document.getElementById('viewCode').style.display='';document.getElementById('codeInput').value='';const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';currentCode=Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join('');const canvas=document.getElementById('codeCanvas');const wrap=document.getElementById('codeImgWrap');const loader=wrap.querySelector('.code-loading');const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;ctx.clearRect(0,0,W,H);const grd=ctx.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#0d0d14');grd.addColorStop(1,'#111118');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);for(let i=0;i<120;i++){ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*H,Math.random()*1.2,0,Math.PI*2);ctx.fillStyle=`rgba(${110+Math.random()*60},${140+Math.random()*60},255,${.15+Math.random()*.25})`;ctx.fill();}for(let l=0;l<5;l++){ctx.beginPath();ctx.moveTo(0,Math.random()*H);for(let x=0;x<W;x+=20)ctx.lineTo(x,10+Math.random()*(H-20));ctx.strokeStyle=`rgba(110,168,255,${.04+Math.random()*.06})`;ctx.lineWidth=.8;ctx.stroke();}const palette=['#8ac4ff','#a0d0ff','#c4ddff','#6ea8ff','#b0c8ff','#fff'];const spacing=W/7;currentCode.split('').forEach((ch,i)=>{const x=spacing*(i+0.85);const y=H/2+10;ctx.save();ctx.translate(x,y);ctx.rotate((Math.random()-.5)*0.44);ctx.scale(1,0.88+Math.random()*0.24);ctx.font=`bold ${28+Math.random()*8}px 'DM Mono',monospace`;ctx.shadowColor=palette[i%palette.length];ctx.shadowBlur=8;ctx.fillStyle=palette[i%palette.length];ctx.fillText(ch,0,0);ctx.restore();});loader.style.display='none';canvas.style.display='block';lucide.createIcons();}
+function verifyCode(){const val=document.getElementById('codeInput').value.trim().toUpperCase();if(val===currentCode)finish();else{shakeBox();showToast(t.wrong,'err');setTimeout(initCode,400);}}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('codeInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyCode();});});
+function initButton(){hideAllViews();document.getElementById('viewButton').style.display='';lucide.createIcons();}
+let btnRunning=false;
+function startButtonChallenge(){if(btnRunning)return;btnRunning=true;const btn=document.getElementById('btnChallengeMain');btn.style.opacity='.7';setTimeout(()=>{btnRunning=false;finish();},1200+Math.random()*800);}
+function finish(){document.getElementById('modalOverlay').classList.remove('active');const cb=document.getElementById('challengeBox');cb.classList.remove('active');cb.style.display='none';const box=document.getElementById('cbBox');box.classList.add('checked');document.getElementById('cbCheck').style.display='grid';document.getElementById('successPill').classList.add('show');const widget=document.getElementById('captchaWidget');widget.style.borderColor='rgba(110,168,255,.28)';widget.style.boxShadow='0 0 60px rgba(0,0,0,.5),0 0 30px rgba(110,168,255,.1)';showToast(t.success,'ok');lucide.createIcons();}
+function shakeBox(){const cb=document.getElementById('challengeBox');cb.style.animation='none';cb.offsetWidth;cb.style.animation='shake .3s ease';setTimeout(()=>cb.style.animation='',400);}
+let toastTimer;
+function showToast(msg,type){const toast=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;toast.className=`toast ${type} show`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);lucide.createIcons();}
+window.addEventListener('mousemove',e=>movePuzzle(e.clientX));
+window.addEventListener('touchmove',e=>movePuzzle(e.touches[0].clientX),{passive:true});
+window.addEventListener('mouseup',releasePuzzle);
+window.addEventListener('touchend',releasePuzzle);
+document.getElementById('captchaWidget').addEventListener('click',startVerification);
+document.getElementById('ctrlLang').addEventListener('change',e=>applyLang(e.target.value));
+document.getElementById('ctrlSize').addEventListener('change',e=>{const w={sm:'260px',md:'310px',lg:'370px'}[e.target.value];document.getElementById('captchaWidget').style.width=w;});
+applyLang('en');
+</script>
+</body>
+</html>
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>desv.online — CAPTCHA Protection API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060608;
+      --panel: rgba(13,13,17,.98);
+      --line: rgba(255,255,255,.07);
+      --text: #f0f0f2;
+      --muted: rgba(255,255,255,.42);
+      --blue: #6ea8ff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 60px 20px;
+      background-image: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(80,120,255,.15) 0%, transparent 70%);
+    }
+    .logo { font-size: 28px; font-weight: 300; letter-spacing: -1px; color: #f0f0f4; }
+    .logo span { color: var(--blue); }
+    .desc { font-size: 13px; color: var(--muted); text-align: center; max-width: 340px; line-height: 1.7; }
+    .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .link-btn {
+      padding: 10px 22px; border-radius: 10px;
+      font-size: 11px; font-weight: 600; font-family: inherit;
+      cursor: pointer; text-decoration: none; transition: .18s;
+    }
+    .link-primary {
+      background: rgba(110,168,255,.1); border: 1px solid rgba(110,168,255,.25); color: var(--blue);
+    }
+    .link-primary:hover { background: rgba(110,168,255,.18); }
+    .link-ghost {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.7);
+    }
+    .link-ghost:hover { background: rgba(255,255,255,.08); }
+    .status { font-size: 9px; color: rgba(255,255,255,.3); letter-spacing: .4px; }
+  </style>
+</head>
+<body>
+  <div class="logo">desv<span>.online</span></div>
+  <p class="desc">CAPTCHA protection API for modern web apps. Fast, lightweight, and developer-friendly.</p>
+  <div class="links">
+    <a href="/captcha.html" class="link-btn link-primary">🛡 CAPTCHA Demo</a>
+    <a href="/docs.html" class="link-btn link-ghost">📄 API Docs</a>
+  </div>
+  <div class="status">🟢 API Operational · v1.0.0</div>
+</body>
+</html>
+

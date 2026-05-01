@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | نظام حماية desv.online</title>
+    <!-- استيراد الخطوط -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6ea8ff;
+            --primary-hover: #5a95e6;
+            --bg: #060608;
+            --card: #0d0d11;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f0f0f4;
+            --muted: rgba(255, 255, 255, 0.5);
+            --error: #ff6b6b;
+            --success: #4eca80;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(110, 168, 255, 0.1) 0%, transparent 70%);
+        }
+
+        .login-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: var(--bg);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            margin-right: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 4px rgba(110, 168, 255, 0.1);
+        }
+
+        /* حاوية الكابتشا */
+        .captcha-wrapper {
+            margin: 24px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-login:disabled {
+            background: #222;
+            color: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-links {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .footer-links a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+        }
+
+        .msg-error { background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.2); color: var(--error); }
+        .msg-success { background: rgba(78, 202, 128, 0.1); border: 1px solid rgba(78, 202, 128, 0.2); color: var(--success); }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                desv.online
+            </div>
+            <p class="subtitle">سجل دخولك للمتابعة إلى لوحة التحكم</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" placeholder="name@company.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" placeholder="••••••••" required>
+            </div>
+
+            <!-- مكان ظهور الكابتشا من الـ API الخاص بك -->
+            <div class="captcha-wrapper">
+                <div id="captcha-box"></div>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn" disabled>تسجيل الدخول</button>
+            
+            <div id="message"></div>
+        </form>
+
+        <div class="footer-links">
+            ليس لديك حساب؟ <a href="#">إنشاء حساب جديد</a>
+        </div>
+    </div>
+
+    <!-- استدعاء السكربت من الـ API الخاص بك مباشرة -->
+    <script src="https://illustrious-playfulness-production-dd1f.up.railway.app/widget.js"></script>
+
+    <script>
+        let isCaptchaSolved = false;
+        let captchaToken = "";
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const messageBox = document.getElementById('message');
+
+        // دالة لإظهار الرسائل
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = type === 'error' ? 'msg-error' : 'msg-success';
+            messageBox.style.display = 'block';
+        }
+
+        // انتظر تحميل الكابتشا
+        window.onload = function() {
+            if (typeof Captcha !== 'undefined') {
+                // رندر الكابتشا من الـ API (نوع اللغز باللغة العربية)
+                Captcha.render("#captcha-box", {
+                    type: "puzzle",
+                    lang: "ar",
+                    onVerify: function(result) {
+                        if (result.success) {
+                            isCaptchaSolved = true;
+                            captchaToken = result.token;
+                            loginBtn.disabled = false; // تفعيل زر الدخول بعد حل الكابتشا
+                            showMessage("تم التحقق بنجاح! يمكنك الدخول الآن.", "success");
+                        }
+                    }
+                });
+            } else {
+                showMessage("فشل تحميل نظام الحماية. يرجى التأكد من اتصال الـ API.", "error");
+            }
+        };
+
+        // معالجة إرسال النموذج
+        loginForm.onsubmit = function(e) {
+            e.preventDefault();
+            
+            if (!isCaptchaSolved) {
+                showMessage("يرجى إكمال التحقق من الكابتشا أولاً.", "error");
+                return;
+            }
+
+            // محاكاة عملية تسجيل الدخول
+            loginBtn.textContent = "جاري الدخول...";
+            loginBtn.disabled = true;
+
+            setTimeout(() => {
+                showMessage("تم تسجيل الدخول بنجاح! (تم استخدام Token: " + captchaToken + ")", "success");
+                loginBtn.textContent = "تم الدخول ✅";
+            }, 1500);
+        };
+    </script>
+</body>
+</html>
